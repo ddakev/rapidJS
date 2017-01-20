@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: game2d.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: game2d.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file Game library for 2D HTML5 Canvas games powered by Javascript
+ * @author Daniel Dakev
+ * @version 0.0.1
+ */
+
+/** Code for paused animation */
+const ANIMATION_PAUSED = 0;
+/** Code for running animation */
+const ANIMATION_RUNNING = 1;
+
+/**
+ * Constructor with parameters for position, size and collider of the game object
+ * @class
+ * @classdesc Describes a generic game object
+ * @param {Number} x - x coordinate of position
+ * @param {Number} y - y coordinate of position
+ * @param {Number} width - width of game object
+ * @param {Number} height - height of game object
+ * @param {Collider} collider - collider of game object
+ */
+function GameObject(x, y, width, height, collider) {
+  this.x = x || 0;
+  this.y = y || 0;
+  this.width = width || 0;
+  this.height = height || 0;
+  this.collider = collider || null;
+  this.animations = [];
+  this.currentAnimation = null;
+  this.bindings = [];
+  this.image = null;
+}
+/**
+ * Set new coordinates
+ * @param {Number} x - new x coordinate
+ * @param {Number} y - new y coordinate
+ */
+GameObject.prototype.moveTo = function(x, y) {
+  this.x = x;
+  this.y = y;
+};
+/**
+ * Moves the coordinates by set amount
+ * @param {Number} dx - distance to move in x direction
+ * @param {Number} dy - distance to move in y direction
+ */
+GameObject.prototype.moveBy = function(dx, dy) {
+  this.x += dx;
+  this.y += dy;
+};
+/**
+ * Sets the size of the game object
+ * @param {Number} w - new width
+ * @param {Number} h - new height
+ */
+GameObject.prototype.setSize = function(w, h) {
+  this.width = w;
+  this.height = h;
+};
+/**
+ * Sets the collider for the game object
+ * @param {Collider} c - new collider
+ */
+GameObject.prototype.setCollider = function(c) {
+  this.collider = c;
+};
+/**
+ * Adds a new animation to the collection of animations for the current object.
+ * @param {Animation} anim - new animation
+ */
+GameObject.prototype.addAnimation = function(anim) {
+  this.animations.add(anim);
+};
+/**
+ * Plays the animation with name animName
+ * @param {String} animName - animation Name of the animation to play
+ */
+GameObject.prototype.playAnimation = function(animName) {
+  if(this.currentAnimation != null) {
+    this.currentAnimation.pause();
+    this.currentAnimation.restart();
+  }
+  this.animations.forEach(function(animation) {
+    if(animation.name == animName) {
+      this.currentAnimation = animation;
+    }
+  });
+};
+/**
+ * Pauses the currently playing animation
+ */
+GameObject.prototype.pauseAnimation = function() {
+  this.currentAnimation.pause();
+};
+/**
+ * Restarts the currently playing animation
+ */
+GameObject.prototype.restartAnimation = function() {
+  this.currentAnimation.restart();
+};
+/**
+ * Disables any animation currently attached to object and displays its default image
+ */
+GameObject.prototype.stopAnimation = function() {
+  this.currentAnimation.pause();
+  this.currentAnimation.restart();
+  this.currentAnimation = null;
+};
+/**
+ * Adds a new key binding for the current object
+ * @param {Object} bind - key binding in the format {keyString: function} where keyString is the unique string identifying the desired key and function is the function to be executed when that key is pressed
+ */
+GameObject.prototype.addKeyBinding = function(bind) {
+  bindings.add(bind);
+};
+/**
+ * Sets the image of the game object
+ * @param {Image} image - new image for the game object
+ */
+GameObject.prototype.setImage = function(image) {
+  this.image = image;
+};
+/**
+ * Draws the game object to the screenWidth
+ * @param {Context} ctx - drawing context
+ */
+GameObject.prototype.draw = function(ctx) {
+  if(this.currentAnimation == null)
+    ctx.drawImage(this.image, 0, 0, this.image.width, this.image.height, this.x, this.y, this.width, this.height);
+  else
+    this.currentAnimation.draw(this.x, this.y, this.width, this.height);
+};
+/**
+ * Advances the game object's properties by one frame
+ */
+GameObject.prototype.advance = function() {
+  if(this.currentAnimation != null)
+    this.currentAnimation.advance();
+};
+
+/**
+ * Constructor with parameter a polygon to be used as collider
+ * @class
+ * @classdesc Describes a polygon collider
+ * @param {Array} polygon - array of value pairs representing the vertices of the polygon collider relative to top-left corner of object
+ */
+function Collider(polygon) {
+  this.polygon = polygon;
+}
+/**
+ * Sets a new polygon for the collider
+ * @param {Array} polygon - array of value pairs representing the vertices of the polygon collider relative to top-left corner of object
+ */
+Collider.prototype.setCollider = function(polygon) {
+  this.polygon = polygon;
+};
+
+/**
+ * Constructor with parameters name, spritesheet, number of rows and columns, duration, and whether to repeat
+ * @class
+ * @classdesc Describes an animation for a game object
+ * @param {String} name - name of animation
+ * @param {Image} image - sprite sheet for animation
+ * @param {Number} rows - number of rows in the spritesheet (defaults to 1)
+ * @param {Number} cols - number of cols in the spritesheet (defaults to 1)
+ * @param {Number} duration - duration of animation in milliseconds
+ * @param {Boolean} repeat - whether the animation should repeat after it ends
+ */
+function Animation(name, image, rows, cols, duration, repeat) {
+  this.name = name;
+  this.currentFrame = -1;
+  this.image = image;
+  this.rows = rows || 1;
+  this.columns = cols || 1;
+  this.duration = duration || 1000;
+  this.status = ANIMATION_PAUSED;
+  this.repeat = repeat || false;
+}
+/**
+ * Starts the current animation
+ */
+Animation.prototype.start = function() {
+  this.status = ANIMATION_RUNNING;
+};
+/**
+ * Pauses the current animation
+ */
+Animation.prototype.pause = function() {
+  this.status = ANIMATION_PAUSED;
+};
+/**
+ * Rewinds the current animation back to its startY
+ */
+Animation.prototype.restart = function() {
+  this.currentFrame = -1;
+};
+/**
+ * Sets a new sprite sheet for the animation
+ * @param {Image} image - an animated spritesheet
+ */
+Animation.prototype.setImage = function(image) {
+  this.image = image;
+};
+/**
+ * Sets a new duration for the animation
+ * @param {Number} duration - new duration for the animation in milliseconds
+ */
+Animation.prototype.setDuration = function(duration) {
+  this.duration = duration;
+};
+/**
+ * Draws the current frame of the animation at the specified position and box size
+ * @param {Context} ctx - drawing Context
+ * @param {Number} x - x coordinate of position where to draw the animation frame
+ * @param {Number} y - y coordinate of position where to draw the animation frame
+ * @param {Number} width - width of the displayed frame
+ * @param {Number} height - height of the displayed frame
+ */
+Animation.prototype.draw = function(ctx, x, y, width, height) {
+  var row = this.currentFrame / this.columns;
+  var col = this.currentFrame % this.columns;
+  ctx.drawImage(this.image, col*this.image.width/this.columns, row*this.image.height/this.rows, this.image.width/this.columns, this.image.height/this.rows, x, y, width, height);
+};
+/**
+ * Advances the animation by one frame; If animation is completed, either restart animation or stop it, depending on the repeat value
+ */
+Animation.prototype.advance = function() {
+  if(this.status == ANIMATION_RUNNING) {
+    this.currentFrame ++;
+    if(this.currentFrame > this.rows * this.cols - 1) {
+      if(this.repeat) this.currentFrame = 0;
+      else {
+        this.status = ANIMATION_PAUSED;
+        this.currentFrame = -1;
+      }
+    }
+  }
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Animation.html">Animation</a></li><li><a href="Collider.html">Collider</a></li><li><a href="GameObject.html">GameObject</a></li></ul><h3>Global</h3><ul><li><a href="global.html#ANIMATION_PAUSED">ANIMATION_PAUSED</a></li><li><a href="global.html#ANIMATION_RUNNING">ANIMATION_RUNNING</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Thu Dec 08 2016 21:38:51 GMT-0500 (EST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
