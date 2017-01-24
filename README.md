@@ -1,7 +1,9 @@
+<img align="center" src="https://github.com/ddakev/rapidJS/blob/master/graphics/logo.png" alt="rapidJS">
+
 #RapidJS
 RapidJS is a Javascript library for _rapid_ 2D game development. It provides classes and methods for most generic features of game development and streamlines the game creation process.
 ##Usage
-To use the library, include the following code in the head of your web page:
+To use the library, include the following code in the head of your web page:  
 `<script type="text/javascript" src="https://raw.githubusercontent.com/ddakev/rapidJS/master/rapid.js"></script>`
 ##Documentation
 For information on how to use the library, please see the documentation in the repo.
